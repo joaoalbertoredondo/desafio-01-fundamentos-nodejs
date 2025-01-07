@@ -25,6 +25,16 @@ export const routes = [
         handler: (req, res) => {
             const { title, description } = req.body
 
+            if (!title) {
+                res.writeHead(400, { "Content-Type": "application/json" });
+                res.end(JSON.stringify({ error: "The title field cannot be blank." }));
+            }
+
+            if (!description) {
+                res.writeHead(400, { "Content-Type": "application/json" });
+                res.end(JSON.stringify({ error: "The description field cannot be blank." }));
+            }
+
             const task = {
                 id: randomUUID(),
                 title,
@@ -46,7 +56,6 @@ export const routes = [
             const { id } = req.params
             const originalRecord = database.select("tasks").find(r => r.id === id)
 
-
             const { title, description, completed_at } = req.body
 
             database.update("tasks", id, {
@@ -54,6 +63,24 @@ export const routes = [
                 description: description || originalRecord.description,
                 completed_at: completed_at || null,
                 updated_at: new Date(),
+                created_at: originalRecord.created_at,
+            })
+
+            return res.writeHead(204).end()
+        }
+    },
+    {
+        method: "PATCH",
+        path: buildRoutePath("/tasks/:id/complete"),
+        handler: (req, res) => {
+            const { id } = req.params
+            const originalRecord = database.select("tasks").find(r => r.id === id)
+
+            database.update("tasks", id, {
+                title: originalRecord.title,
+                description: originalRecord.description,
+                completed_at: new Date(),
+                updated_at: originalRecord.updated_at,
                 created_at: originalRecord.created_at,
             })
 
